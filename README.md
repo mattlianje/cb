@@ -57,26 +57,15 @@ cb.classes.extending[Rule]
 cb.givens.of[JsonCodec[_]] // implicit JsonCodec vals/defs
 cb.objects.annotated[registered] // objects carrying @registered
 
+/* Collect live values of a type */
+val routes: List[Route] = cb.collect[Route]
+val filteredRoutes =
+     cb.vals.ofType[Route](subtypes = true).in("com.acme.routes").instances[Route]
+
 /* Enforce rules */
 cb.vals.ofType[DbConnection]
   .in("com.acme.infra")
   .assertAll(!_.isPublic, "connections must be private")
-```
-
-
-### Collecting instances
-
-Gather the live values of a type ... like when you have a registry of 
-`val`s scattered in objects.
-
-```scala
-val routes: List[Route] = cb.collect[Route]
-```
-
-Or you can scope first:
-
-```scala
-cb.vals.ofType[Route](subtypes = true).in("com.acme.routes").instances[Route]
 ```
 
 ## Which classpath?
