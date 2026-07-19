@@ -4,13 +4,12 @@ import mill._, scalalib._, publish._
 val scalaVersions     = Seq("2.12.17", "2.13.10")
 val classGraphVersion = "4.8.179"
 
-// Shared publish settings
 trait CbPublishModule extends SonatypeCentralPublishModule {
   def publishVersion = "0.1.0"
   def artifactName   = "cb"
 
   def pomSettings = PomSettings(
-    description = "Query your Scala classpath with real Scala types - no TASTy required",
+    description = "Easy codebase introspection for Scala",
     organization = "xyz.matthieucourt",
     url = "https://github.com/mattlianje/cb",
     licenses = Seq(License.`Apache-2.0`),
