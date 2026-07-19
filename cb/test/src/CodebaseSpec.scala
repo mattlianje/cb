@@ -122,4 +122,10 @@ class CodebaseSpec extends munit.FunSuite {
     val conns = codebase.vals.ofType[DbConnection].in("cb.fixtures").instances[DbConnection]
     assert(conns.isEmpty, conns)
   }
+
+  test("collect gathers live values of a type across singletons, subtypes included") {
+    val names = codebase.collect[Person].map(_.name)
+    assert(names.contains("boss"), names) // val boss: Person
+    assert(names.contains("ada"), names)  // val topEmployee: Employee (subtype)
+  }
 }

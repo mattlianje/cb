@@ -57,6 +57,24 @@ final class Codebase(val backend: Backend) {
     }
     members ++ types.toList
   }
+
+  /**
+   * Collect the live values of type `T` (subtypes included) declared as `val`s
+   * or no-arg `def`s in singleton `object`s across the codebase: the "registry
+   * scattered as vals" pattern. Class-owned members are skipped, and reading
+   * each value runs its initializer, so this is effectful.
+   *
+   * {{{ val routes: List[Route] = cb.collect[Route] }}}
+   *
+   * Shorthand for `(vals ++ defs).ofType[T](subtypes = true).instances[T]`; drop
+   * to that form when you need to scope with `.in(...)` first.
+   */
+  def collect[T](implicit cap: TypeCapture[T]): List[T] =
+    (backend.valMembers ++ backend.defMembers).iterator
+      .filter(m => backend.conforms(m.memberType, cap.typeRef))
+      .flatMap(backend.instanceOf)
+      .map(_.asInstanceOf[T])
+      .toList
 }
 
 object Codebase {

@@ -107,8 +107,17 @@ final class ReflectBackend(val mirror: ru.Mirror, names: List[String]) extends B
   def sameType(a: TypeRef, b: TypeRef): Boolean =
     Try(nativeOf(a) =:= nativeOf(b)).getOrElse(false)
 
+  // Nothing/Null are subtypes of everything; matching them as a subtype never
+  // reflects user intent and would sweep in every `def foo: Nothing` stub or
+  // synthetic `scala.Null` default-arg accessor.
+  private lazy val bottomSyms: Set[ru.Symbol] =
+    Set(ru.definitions.NothingClass, ru.definitions.NullClass)
+
   def conforms(sub: TypeRef, sup: TypeRef): Boolean =
-    Try(nativeOf(sub) <:< nativeOf(sup)).getOrElse(false)
+    Try {
+      val s = nativeOf(sub)
+      s <:< nativeOf(sup) && !bottomSyms.contains(s.typeSymbol)
+    }.getOrElse(false)
 
   def sameConstructor(a: TypeRef, b: TypeRef): Boolean =
     Try(nativeOf(a).typeConstructor =:= nativeOf(b).typeConstructor).getOrElse(false)

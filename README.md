@@ -63,9 +63,17 @@ cb.objects.annotated[registered].toList // plain Entity list
 
 ### Collecting instances
 
+Gather the live values of a type ... like when you have a registry of 
+`val`s scattered in objects.
+
 ```scala
-val routes: List[Route] =
-  cb.vals.ofType[Route](subtypes = true).instances[Route]
+val routes: List[Route] = cb.collect[Route]
+```
+
+Or you can scope first:
+
+```scala
+cb.vals.ofType[Route](subtypes = true).in("com.acme.routes").instances[Route]
 ```
 
 ## Which classpath?
