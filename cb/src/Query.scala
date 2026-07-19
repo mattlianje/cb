@@ -59,6 +59,20 @@ final class MemberQuery private[cb] (backend: Backend, val items: Vector[Member]
   def instances[T]: List[T] =
     items.iterator.flatMap(backend.instanceOf).map(_.asInstanceOf[T]).toList
 
+  /**
+   * Like [[instances]], but pairs every materialized value with the source path
+   * of the `object` it was declared in (see [[TypeEntity.sourcePath]]), joined on
+   * the owner. The path is `None` when the backend has no `SourceFile` for it.
+   *
+   * {{{ cb.vals.ofType[Route](subtypes = true).instancesLocated[Route] }}}
+   */
+  def instancesLocated[T]: List[(T, Option[String])] = {
+    val srcByFqn = backend.objects.iterator.map(o => o.fqn -> o.sourcePath).toMap
+    items.iterator.flatMap { m =>
+      backend.instanceOf(m).map(v => (v.asInstanceOf[T], srcByFqn.getOrElse(m.owner.fqn, None)))
+    }.toList
+  }
+
   /** Throw [[CbAssertionError]] with `msg` and the offenders if any member fails `p`. */
   def assertAll(p: Member => Boolean, msg: String): Unit = {
     val offenders = items.filterNot(p)

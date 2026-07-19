@@ -83,5 +83,13 @@ final case class TypeEntity(
   isImplicit: Boolean,
   isPublic: Boolean,
   annotations: List[String],
-  pos: Position
-) extends Entity
+  pos: Position,
+  // Source path relative to a source root (e.g. "com/acme/routes/Routes.scala"),
+  // reconstructed from the package plus the bytecode `SourceFile` attribute.
+  // No source root prefix and no line number; `None` if the backend has neither.
+  sourcePath: Option[String] = None
+) extends Entity {
+
+  /** The bare source filename, e.g. "Routes.scala". */
+  def sourceFile: Option[String] = sourcePath.map(_.split('/').last)
+}

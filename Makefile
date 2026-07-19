@@ -1,6 +1,6 @@
 .PHONY: compile test publish-local bundle fmt fmt-check repl clean
 
-VERSION := 0.1.0
+VERSION := 0.1.1
 BUNDLE_DIR := bundles
 GPG_KEY := F36FE8EEBD829E6CF1A5ADB6246482D1268EDC6E
 

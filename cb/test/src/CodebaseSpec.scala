@@ -128,4 +128,21 @@ class CodebaseSpec extends munit.FunSuite {
     assert(names.contains("boss"), names) // val boss: Person
     assert(names.contains("ada"), names)  // val topEmployee: Employee (subtype)
   }
+
+  test("instancesLocated pairs each value with its declaring object's source path") {
+    val located =
+      codebase.vals.ofType[Person](subtypes = true).in("cb.fixtures").instancesLocated[Person]
+    val byName = located.map { case (p, src) => p.name -> src }.toMap
+    assert(byName.get("boss").flatten.contains("cb/fixtures/Fixtures.scala"), byName)
+    assert(byName.get("ada").flatten.contains("cb/fixtures/Fixtures.scala"), byName)
+  }
+
+  test("types carry their reconstructed source path") {
+    val hr = codebase.objects.in("cb.fixtures").toList.find(_.name == "HR").get
+    assert(hr.sourcePath.contains("cb/fixtures/Fixtures.scala"), hr.sourcePath)
+    assert(hr.sourceFile.contains("Fixtures.scala"), hr.sourceFile)
+
+    val employee = codebase.classes.in("cb.fixtures").toList.find(_.name == "Employee").get
+    assert(employee.sourceFile.contains("Fixtures.scala"), employee.sourceFile)
+  }
 }

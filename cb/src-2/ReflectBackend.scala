@@ -8,13 +8,17 @@ import scala.util.Try
  * `scala.reflect` runtime universe. Every symbol access is wrapped in `Try` so
  * one unresolvable class never fails the whole scan.
  */
-final class ReflectBackend(val mirror: ru.Mirror, names: List[String]) extends Backend {
+final class ReflectBackend(
+  val mirror: ru.Mirror,
+  names: List[String],
+  sources: Map[String, String] = Map.empty
+) extends Backend {
   import ReflectBackend._
 
   private def clean(n: ru.Name): String = n.decodedName.toString.trim
 
   private lazy val scalaNames: Vector[String] =
-    names.iterator.map(_.stripSuffix("$").replace('$', '.')).toVector.distinct
+    names.iterator.map(scalaName).toVector.distinct
 
   private lazy val classSyms: Vector[ru.ClassSymbol] =
     scalaNames.flatMap(n => Try(mirror.staticClass(n)).toOption)
@@ -75,7 +79,8 @@ final class ReflectBackend(val mirror: ru.Mirror, names: List[String]) extends B
       sym.isImplicit,
       sym.isPublic,
       annotationsOf(sym),
-      NoPosition
+      NoPosition,
+      sources.get(sym.fullName)
     )
 
   private lazy val allMembers: Vector[Member] =
@@ -136,6 +141,10 @@ final class ReflectBackend(val mirror: ru.Mirror, names: List[String]) extends B
 }
 
 object ReflectBackend {
+
+  /** JVM class name to Scala fqn: drop a module's trailing `$`, turn the inner
+   *  class separator `$` into `.` (e.g. `a.B$C$` becomes `a.B.C`). */
+  def scalaName(jvm: String): String = jvm.stripSuffix("$").replace('$', '.')
 
   /** Convert a `scala.reflect` type into a neutral [[TypeRef]]. */
   def toTypeRef(t0: ru.Type): TypeRef =

@@ -4,7 +4,7 @@ import scala.reflect.runtime.{universe => ru}
 import io.github.classgraph.ClassGraph
 import scala.collection.JavaConverters._
 import java.net.URLClassLoader
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 
 /**
  * A queryable view of a classpath.
@@ -79,12 +79,16 @@ final class Codebase(val backend: Backend) {
 
 object Codebase {
 
-  /** Enumerate class names with ClassGraph (single-threaded by design). */
-  private def scanNames(
+  /** A ClassGraph scan: the JVM class names, plus a map from Scala fqn to the
+   *  source path (package dir + bytecode `SourceFile`) for classes that have one. */
+  private final case class Scan(names: List[String], sources: Map[String, String])
+
+  /** Enumerate classes with ClassGraph (single-threaded by design). */
+  private def scanClasspath(
     classLoaders: Seq[ClassLoader],
     classpath: Seq[Path],
     acceptPackages: Seq[String]
-  ): List[String] = {
+  ): Scan = {
     val configure: List[ClassGraph => ClassGraph] = List(
       cg => if (classLoaders.nonEmpty) cg.overrideClassLoaders(classLoaders: _*) else cg,
       cg => if (classpath.nonEmpty) cg.overrideClasspath(classpath.map(_.toString): _*) else cg,
@@ -93,9 +97,27 @@ object Codebase {
     val cg =
       configure.foldLeft(new ClassGraph().enableClassInfo.enableAnnotationInfo)((g, f) => f(g))
     val scan = cg.scan()
-    try scan.getAllClasses.getNames.asScala.toList
-    finally scan.close()
+    try {
+      val infos   = scan.getAllClasses.asScala.toList
+      val sources = infos.iterator.flatMap { ci =>
+        Option(ci.getSourceFile).map { file =>
+          val pkg = ci.getPackageName
+          val rel = if (pkg.isEmpty) file else s"${pkg.replace('.', '/')}/$file"
+          ReflectBackend.scalaName(ci.getName) -> rel
+        }
+      }.toMap
+      Scan(infos.map(_.getName), sources)
+    } finally scan.close()
   }
+
+  /**
+   * Resolve a type's [[TypeEntity.sourcePath]] against a set of source roots to
+   * the actual file on disk, if one exists.
+   *
+   * {{{ Codebase.locate(entity, Seq(Paths.get("src/main/scala"))) }}}
+   */
+  def locate(entity: TypeEntity, roots: Seq[Path]): Option[Path] =
+    entity.sourcePath.flatMap(rel => roots.iterator.map(_.resolve(rel)).find(Files.exists(_)))
 
   /**
    * Scan the current run classpath, scoped to zero or more package prefixes.
@@ -118,13 +140,10 @@ object Codebase {
     fromClasspath(classLoader, Nil)
 
   /** As [[fromClasspath]], but restrict the scan to the given packages. */
-  def fromClasspath(classLoader: ClassLoader, acceptPackages: Seq[String]): Codebase =
-    new Codebase(
-      new ReflectBackend(
-        ru.runtimeMirror(classLoader),
-        scanNames(Seq(classLoader), Nil, acceptPackages)
-      )
-    )
+  def fromClasspath(classLoader: ClassLoader, acceptPackages: Seq[String]): Codebase = {
+    val scanned = scanClasspath(Seq(classLoader), Nil, acceptPackages)
+    new Codebase(new ReflectBackend(ru.runtimeMirror(classLoader), scanned.names, scanned.sources))
+  }
 
   /** Scan the classloader that loaded `cb` itself. */
   def fromClasspath(): Codebase = fromClasspath(getClass.getClassLoader)
@@ -140,8 +159,9 @@ object Codebase {
     parent: ClassLoader = classOf[Codebase].getClassLoader,
     acceptPackages: Seq[String] = Nil
   ): Codebase = {
-    val cl = new URLClassLoader(paths.map(_.toUri.toURL).toArray, parent)
-    new Codebase(new ReflectBackend(ru.runtimeMirror(cl), scanNames(Nil, paths, acceptPackages)))
+    val cl      = new URLClassLoader(paths.map(_.toUri.toURL).toArray, parent)
+    val scanned = scanClasspath(Nil, paths, acceptPackages)
+    new Codebase(new ReflectBackend(ru.runtimeMirror(cl), scanned.names, scanned.sources))
   }
 
   /** Build a [[Codebase]] over an explicit set of JVM class names. */

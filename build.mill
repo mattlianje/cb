@@ -5,7 +5,7 @@ val scalaVersions     = Seq("2.12.17", "2.13.10")
 val classGraphVersion = "4.8.179"
 
 trait CbPublishModule extends SonatypeCentralPublishModule {
-  def publishVersion = "0.1.0"
+  def publishVersion = "0.1.1"
   def artifactName   = "cb"
 
   def pomSettings = PomSettings(
