@@ -5,7 +5,7 @@
 # cb
 **Easy codebase introspection**
 
-A tiny, intuitive libray for querying Scala classpaths.
+A tiny, intuitive libray for querying and enforcing rules on Scala classpaths.
 
 ## Features
 - Real Scala types
