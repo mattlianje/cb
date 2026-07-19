@@ -62,6 +62,14 @@ val routes: List[Route] = cb.collect[Route]
 val filteredRoutes =
      cb.vals.ofType[Route](subtypes = true).in("com.acme.routes").instances[Route]
 
+/* Collect them with the source file they were declared in */
+val located: List[(Route, Option[String])] =
+     cb.vals.ofType[Route](subtypes = true).instancesLocated[Route]
+
+/* Where is a type defined? */
+cb.classes.ofType[Route].toList.head.sourcePath // Some("com/acme/routes/Routes.scala")
+cb.classes.ofType[Route].toList.head.sourceFile // Some("Routes.scala")
+
 /* Enforce rules */
 cb.vals.ofType[DbConnection]
   .in("com.acme.infra")
