@@ -26,6 +26,10 @@ import cb._
 /* Scan your sources */
 val cb = Codebase.scan("com.acme")
 
+/* Query them */
+cb.vals.ofType[Person]
+
+/* Enfore rules */
 cb.defs.filter(_.isPublic).returning[IO[_]]
   .assertAll(_.in("com.acme.service"),
              "public defs returning IO must stay in the service layer")
@@ -50,15 +54,13 @@ cb.vals.ofType[Person]
 cb.vals.ofType[Person](subtypes = true)
 cb.defs.returning[IO[_]].filter(_.isPublic)
 cb.classes.extending[Rule]
-cb.givens.of[JsonCodec[_]]
+cb.givens.of[JsonCodec[_]] // implicit JsonCodec vals/defs
 cb.objects.annotated[registered] // objects carrying @registered
 
 /* Enforce rules */
 cb.vals.ofType[DbConnection]
   .in("com.acme.infra")
   .assertAll(!_.isPublic, "connections must be private")
-
-cb.objects.annotated[registered].toList // plain Entity list
 ```
 
 
