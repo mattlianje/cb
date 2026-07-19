@@ -23,10 +23,9 @@ import cb._
 ```scala
 import cb._
 
-/* Scan your sources, not your deps */
+/* Scan your sources */
 val cb = Codebase.scan("com.acme")
 
-/* Easily scoop up vals, defs, etc and check for rules */
 cb.defs.filter(_.isPublic).returning[IO[_]]
   .assertAll(_.in("com.acme.service"),
              "public defs returning IO must stay in the service layer")
@@ -40,19 +39,21 @@ cb.CbAssertionError: public defs returning IO must stay in the service layer
   - com.acme.repo.OrderRepo.save:      cats.effect.IO[Unit]
 ```
 
-## The query language
+## API
 
 ```scala
+/* Scope a classpath */
 val cb = Codebase.scan("com.acme")
 
-cb.vals.ofType[Person]                       // vals typed exactly Person
-cb.vals.ofType[Person](subtypes = true)      // ...and its subtypes
-cb.defs.returning[IO[_]].filter(_.isPublic)  // defs returning IO of anything
-cb.classes.extending[Rule]                   // classes/traits implementing Rule
-cb.givens.of[JsonCodec[_]]                   // implicit vals/defs
-cb.objects.annotated[registered]             // objects carrying @registered
+/* Query it */
+cb.vals.ofType[Person]
+cb.vals.ofType[Person](subtypes = true)
+cb.defs.returning[IO[_]].filter(_.isPublic)
+cb.classes.extending[Rule]
+cb.givens.of[JsonCodec[_]]
+cb.objects.annotated[registered] // objects carrying @registered
 
-/* Easy scoping, then enforcement */
+/* Enforce rules */
 cb.vals.ofType[DbConnection]
   .in("com.acme.infra")
   .assertAll(!_.isPublic, "connections must be private")
@@ -71,7 +72,7 @@ val routes: List[Route] =
 ## Which classpath?
 
 ```scala
-Codebase.scan("com.acme") // Current run classpath, scoped
+Codebase.scan("com.acme") // Current run classpath (scoped)
 Codebase.scan() // Everything on the classpath
 Codebase.fromPaths(paths, acceptPackages = Seq("com.acme")) // Explicit entries
 ```
