@@ -12,8 +12,13 @@ A tiny, intuitive libray for querying and enforcing rules on Scala classpaths.
 - Smooth rules and queries
 - Swappable backends (pickle or TASTy)
 
+## Installation
+On MavenCentral, cross-built for Scala 2.12, 2.13 (JVM only)
+```scala
+"xyz.matthieucourt" %% "cb" % "0.1.1"
+```
 
-All you need:
+All you need
 ```scala
 import cb._
 ```
@@ -44,10 +49,10 @@ cb.CbAssertionError: public defs returning IO must stay in the service layer
 ```
 
 ## Of note
-There is already a rich tradition of programs which scan JVM classpaths ([ClassGraph](https://github.com/classgraph/classgraph), [ServiceLoader](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html), [Spring component-scan](https://docs.spring.io/spring-framework/reference/core/beans/classpath-scanning.html)), then
+There is already a rich tradition of programs which scan JVM classpaths ([ClassGraph](https://github.com/classgraph/classgraph), [ServiceLoader](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html), [Spring component-scan](https://docs.spring.io/spring-framework/reference/core/beans/classpath-scanning.html), etc), then
 let your perform [ArchUnit](https://github.com/TNG/archUnit)-like assertions to enforce invariants and "unit test your code structure".
 
-Whilst cb lets you do the afore... it really is just a modest ClassGraph wrapper which puts novel emphasis on:
+Whilst **cb** lets you do the afore... it really is just a modest ClassGraph wrapper which puts novel emphasis on:
 - Scala ergonomics
 - Typed retrieval of instances
 
