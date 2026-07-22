@@ -54,9 +54,9 @@ cb.CbAssertionError: public defs returning IO must stay in the service layer
 ```
 
 ## Of note
-Scanning JVM classpaths is well-trodden ground ([ClassGraph](https://github.com/classgraph/classgraph), [ServiceLoader](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html), [Spring component-scan](https://docs.spring.io/spring-framework/reference/core/beans/classpath-scanning.html)), as is [ArchUnit](https://github.com/TNG/archUnit)-style assertions to "unit test your code structure".
+There is a rich tradition of libs that scan JVM classpaths... [ClassGraph](https://github.com/classgraph/classgraph), [ServiceLoader](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html), [Spring component-scan](https://docs.spring.io/spring-framework/reference/core/beans/classpath-scanning.html), etc. and [ArchUnit](https://github.com/TNG/archUnit)-style ones to "unit test your code structure".
 
-**cb** is just a thin ClassGraph wrapper... its novelty is Scala ergonomics and typed retrieval of live instances.
+Ultimately, **cb** is just a thin ClassGraph wrapper - its novelty is Scala ergonomics and typed retrieval of live instances.
 
 ## API
 
