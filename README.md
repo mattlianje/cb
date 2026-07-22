@@ -9,12 +9,13 @@
 # cb
 **Easy codebase introspection**
 
-A tiny, intuitive libray for querying and enforcing rules on Scala classpaths.
+A tiny, intuitive library for querying and enforcing rules on Scala classpaths.
 
 ## Features
-- Real Scala types
-- Smooth rules and queries
-- Swappable backends (pickle or TASTy)
+- Query by real Scala types (`Person`, `IO[_]`, etc), not strings
+- Assert architecture rules that fail the build when code drifts
+- Collect live typed values (`List[Route]`) off classpaths
+- Swappable backends: pickle or TASTy
 
 ## Installation
 On MavenCentral, cross-built for Scala 2.12, 2.13 (JVM only)
@@ -38,7 +39,7 @@ val cb = Codebase.scan("com.acme")
 /* Query them */
 cb.vals.ofType[Person]
 
-/* Enfore rules */
+/* Enforce rules */
 cb.defs.filter(_.isPublic).returning[IO[_]]
   .assertAll(_.in("com.acme.service"),
              "public defs returning IO must stay in the service layer")
@@ -53,12 +54,9 @@ cb.CbAssertionError: public defs returning IO must stay in the service layer
 ```
 
 ## Of note
-There is already a rich tradition of programs which scan JVM classpaths ([ClassGraph](https://github.com/classgraph/classgraph), [ServiceLoader](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html), [Spring component-scan](https://docs.spring.io/spring-framework/reference/core/beans/classpath-scanning.html), etc), then
-let your perform [ArchUnit](https://github.com/TNG/archUnit)-like assertions to enforce invariants and "unit test your code structure".
+Scanning JVM classpaths is well-trodden ground ([ClassGraph](https://github.com/classgraph/classgraph), [ServiceLoader](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html), [Spring component-scan](https://docs.spring.io/spring-framework/reference/core/beans/classpath-scanning.html)), as is [ArchUnit](https://github.com/TNG/archUnit)-style assertions to "unit test your code structure".
 
-Whilst **cb** lets you do the afore... it really is just a modest ClassGraph wrapper which puts novel emphasis on:
-- Scala ergonomics
-- Typed retrieval of instances
+**cb** is just a thin ClassGraph wrapper... its novelty is Scala ergonomics and typed retrieval of live instances.
 
 ## API
 
@@ -106,4 +104,7 @@ Codebase.scan("com.acme") // Current run classpath (scoped)
 Codebase.scan() // Everything on the classpath
 Codebase.fromPaths(paths, acceptPackages = Seq("com.acme")) // Explicit entries
 ```
+
+## Changelog
+- **0.1.1** Initial release. Classpath scanning, typed queries, and ArchUnit-style rule assertions.
 
